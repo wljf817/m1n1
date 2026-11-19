@@ -69,6 +69,8 @@ int selfboot_layout_disk(struct selfboot_layout *l, u64 size);
 /* What the entry code of the firmware relies on in the header of the image */
 int selfboot_check_image(const void *image, u64 size);
 /* What the firmware needs of the boot disk to register it and to find a partition */
+int selfboot_read_files(struct selfboot_layout *l, const char *part_uuid,
+                        int (*check_disk)(const void *, u64));
 int selfboot_check_disk(const void *disk, u64 size);
 
 /* The boot arguments of the guest: those of m1n1, with its memory and its device tree */
@@ -79,6 +81,7 @@ void selfboot_boot_args(struct boot_args *out, const struct boot_args *cur,
  * The device tree of the guest, written to `dest` (adt_base): a copy of m1n1's, `size` bytes,
  * with DeviceTree, BootArgs and RAMDisk in /chosen/memory-map. m1n1's own is not changed.
  */
+int selfboot_adt_add_range(void *dest, const char *name, u64 base, u64 bytes);
 int selfboot_adt(void *dest, u32 size, const struct selfboot_layout *l);
 
 /*

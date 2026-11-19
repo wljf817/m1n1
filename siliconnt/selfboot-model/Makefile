@@ -62,11 +62,15 @@ build/build_cfg.h:
 	@mkdir -p build
 	echo "#define CHAINLOADING" > $@
 
-RUN_COPIES := build/selfboot.c build/selfboot_run.c build/selfboot.h build/adt.h build/xnuboot.h
+build/selfboot_files.c: $(SRC)/selfboot_files.c
+	@mkdir -p build
+	cp $< $@
+
+RUN_COPIES := build/selfboot_files.c build/selfboot.c build/selfboot_run.c build/selfboot.h build/adt.h build/xnuboot.h
 RUN_COPIES += build/mcc.h build/arm_cpu_regs.h build/build_cfg.h
 
 build/run-model: run_test.c model.c $(wildcard *.h) $(RUN_COPIES)
-	$(CC) $(CFLAGS) -o $@ run_test.c model.c build/selfboot.c build/selfboot_run.c
+	$(CC) $(CFLAGS) -o $@ run_test.c model.c build/selfboot.c build/selfboot_files.c build/selfboot_run.c
 
 clean:
 	rm -rf build

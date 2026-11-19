@@ -9,8 +9,10 @@
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
-typedef uint64_t u64;
-typedef int64_t s64;
+/* Match the AArch64 target's LP64 types on Linux and Darwin hosts. */
+typedef unsigned long u64;
+typedef long s64;
+_Static_assert(sizeof(u64) == 8, "the host model requires LP64");
 #define PACKED __attribute__((packed))
 /* As in src/types.h */
 #define BIT(x)            (1UL << (x))

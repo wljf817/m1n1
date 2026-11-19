@@ -143,8 +143,12 @@ static void make_tree(void)
 
 static void map_window(u64 base)
 {
-    void *p = mmap((void *)base, WINDOW, PROT_READ | PROT_WRITE,
-                   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE | MAP_NORESERVE, -1, 0);
+    int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE;
+#ifdef MAP_FIXED_NOREPLACE
+    flags |= MAP_FIXED_NOREPLACE;
+#endif
+    /* Darwin treats base as a hint. Accept only the requested address. */
+    void *p = mmap((void *)base, WINDOW, PROT_READ | PROT_WRITE, flags, -1, 0);
     if (p != (void *)base) {
         printf("run_test: no memory at 0x%lx for the guest\n", base);
         exit(2);

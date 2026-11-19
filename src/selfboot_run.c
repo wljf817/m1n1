@@ -45,9 +45,6 @@
 #define NO_HOST IODEV_NUM
 
 /* rust/src/readfile.rs, in a build with CHAINLOADING */
-int rust_read_file(const char *part_uuid, const char *path, void *dest, size_t max_size,
-                   size_t *size);
-
 /* What follows hv_init() in HV.init(), as far as the M4 has it */
 static void selfboot_regs(void)
 {
@@ -232,24 +229,6 @@ static int selfboot_enter(const struct selfboot_layout *l, iodev_id_t host)
 
 #ifdef CHAINLOADING
 
-static int read_files(struct selfboot_layout *l, const char *part_uuid)
-{
-    size_t size;
-
-    if (rust_read_file(part_uuid, SELFBOOT_IMAGE_FILE, (void *)l->image_base,
-                       selfboot_image_room(l), &size) < 0 ||
-        selfboot_layout_image(l, size) < 0 || selfboot_check_image((void *)l->image_base, size) < 0)
-        return -1;
-    printf("selfboot: " SELFBOOT_IMAGE_FILE ": 0x%lx bytes\n", size);
-
-    if (rust_read_file(part_uuid, SELFBOOT_DISK_FILE, (void *)l->disk_base, selfboot_disk_room(l),
-                       &size) < 0 ||
-        selfboot_layout_disk(l, size) < 0 || selfboot_check_disk((void *)l->disk_base, size) < 0)
-        return -1;
-    printf("selfboot: " SELFBOOT_DISK_FILE ": 0x%lx bytes\n", size);
-    return 0;
-}
-
 int selfboot_run(const char *part_uuid)
 {
     /* Where ProxyUtils of the host puts its own heap: here guest RAM starts there */
@@ -266,7 +245,7 @@ int selfboot_run(const char *part_uuid)
         printf("selfboot: the SSD controller did not come up\n");
         return -1;
     }
-    ret = read_files(&l, part_uuid);
+    ret = selfboot_read_files(&l, part_uuid, selfboot_check_disk);
     nvme_shutdown();
     if (ret < 0)
         return -1;

@@ -420,6 +420,10 @@ static void test_adt_takes_a_spare_entry_that_is_free(void)
     CHECK(guest_range_is("RAMDisk", 0x1001cc00000, R21_DISK));
     CHECK(!guest_prop("MemoryMapReserved-1"));
     CHECK(guest_range_is("MemoryMapReserved-2", 0, 0));
+    CHECK_EQ(selfboot_adt_add_range(guest_tree + 32, "SiliconNTFirmware", l.image_base,
+                                    l.image_size), 0);
+    CHECK(guest_range_is("SiliconNTFirmware", l.image_base, l.image_size));
+    CHECK(guest_range_is("RAMDisk", 0x1001cc00000, R21_DISK));
 }
 
 static void test_adt_refuses_a_tree_without_what_it_needs(void)

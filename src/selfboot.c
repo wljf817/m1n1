@@ -230,9 +230,6 @@ static int set_range(void *dest, int node, const char *name, u64 base, u64 size)
 int selfboot_adt(void *dest, u32 size, const struct selfboot_layout *l)
 {
     int node = adt_path_offset(adt, MEMORY_MAP);
-    struct adt_property *ramdisk = NULL;
-    u64 range[2];
-
     if (node < 0) {
         printf("selfboot: no " MEMORY_MAP " in the device tree\n");
         return -1;
@@ -244,11 +241,22 @@ int selfboot_adt(void *dest, u32 size, const struct selfboot_layout *l)
         set_range(dest, node, "BootArgs", l->bootargs, SELFBOOT_BOOTARGS_SIZE) < 0)
         return -1;
 
+    return selfboot_adt_add_range(dest, RAMDISK, l->disk_base, l->disk_size);
+}
+
+int selfboot_adt_add_range(void *dest, const char *name, u64 base, u64 bytes)
+{
+    int node = adt_path_offset(adt, MEMORY_MAP);
+    struct adt_property *ramdisk = NULL;
+    u64 range[2];
+    if (node < 0 || strlen(name) >= sizeof(ramdisk->name))
+        return -1;
     ADT_FOREACH_PROPERTY(adt, node, prop)
     {
-        if (strncmp(prop->name, SPARE_ENTRY, strlen(SPARE_ENTRY)) || prop->size != sizeof(range))
+        struct adt_property *candidate = copy_of(dest, prop);
+        if (strncmp(candidate->name, SPARE_ENTRY, strlen(SPARE_ENTRY)) || prop->size != sizeof(range))
             continue;
-        memcpy(range, prop->value, sizeof(range));
+        memcpy(range, candidate->value, sizeof(range));
         if (range[0] || range[1])
             continue;
         ramdisk = copy_of(dest, prop);
@@ -260,10 +268,10 @@ int selfboot_adt(void *dest, u32 size, const struct selfboot_layout *l)
     }
 
     memset(ramdisk->name, 0, sizeof(ramdisk->name));
-    strcpy(ramdisk->name, RAMDISK);
+    strcpy(ramdisk->name, name);
     /* The size in bytes, not rounded: it is the size of the disk */
-    range[0] = l->disk_base;
-    range[1] = l->disk_size;
+    range[0] = base;
+    range[1] = bytes;
     memcpy(ramdisk->value, range, sizeof(range));
     return 0;
 }

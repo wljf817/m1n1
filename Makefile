@@ -186,7 +186,7 @@ OBJECTS := \
 	rtkit.o \
 	sart.o \
 	selfboot.o \
-	selfboot_run.o \
+	selfboot_files.o selfboot_run.o \
 	sep.o \
 	sio.o \
 	smc.o \
